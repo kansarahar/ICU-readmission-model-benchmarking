@@ -1,5 +1,7 @@
 # ICU Readmission Model Benchmarking
 
+## Resources
+Adapted from the original publication codebase: https://github.com/sebbarb/time_aware_attention
 
 ## Docker Setup
 
@@ -13,3 +15,6 @@ to create the container.
 
 Run `docker exec -it <CONTAINER_ID> bash` anytime after to re-enter the container.
 
+Run `apt-get update && apt-get install -y git` to install git on the docker container
+
+Run `pip install torchdiffeq`
