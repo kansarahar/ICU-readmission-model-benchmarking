@@ -22,7 +22,7 @@ def get_arrays(df: pd.DataFrame, patient_admissions: pd.DataFrame, num_icu_stays
 
     return df, df_times, dict_df
 
-def create_splits(data_dir: str, output_dir: str):
+def process_create_arrays(data_dir: str, output_dir: str):
 
     patient_admissions: pd.DataFrame = pd.read_pickle(os.path.join(output_dir, 'patient_admissions.pkl'))
     dp: pd.DataFrame = pd.read_pickle(os.path.join(output_dir, 'diag_proc.pkl'))
@@ -72,4 +72,4 @@ if __name__ == '__main__':
     print('Selected input file directory:', data_dir)
     print('Selected output file directory:', output_dir)
 
-    create_splits(data_dir, output_dir)
+    process_create_arrays(data_dir, output_dir)
