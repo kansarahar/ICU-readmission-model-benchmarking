@@ -50,7 +50,6 @@ class ODEFunc(nn.Module):
         super(ODEFunc, self).__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
-        self.nfe = 0 # number of function evaluations
         self.layers = nn.Sequential(
             nn.Linear(input_dim, hidden_dim), # if it were time-dependent, we would have nn.Linear(self.input_dim + 1, hidden_dim) and concat x with t, but we're assuming it's not
             nn.Softplus(),
@@ -60,7 +59,6 @@ class ODEFunc(nn.Module):
         )
 
     def forward(self, t: torch.tensor, x: torch.tensor):
-        self.nfe += 1
         return self.layers(x)
 
 class ODEBlock(nn.Module):
@@ -71,7 +69,7 @@ class ODEBlock(nn.Module):
         x - tensor of shape (batch_size, ODEFunc.input_dim)
         eval_times - None or tensor
     Outputs:
-        out - if eval_times == None, returns the ODE solution at final time t=1, else returns full ODE trajectory evaluated at points in eval_times
+        out - returns full ODE trajectory evaluated at points in eval_times
     '''
 
     def __init__(self, odefunc: ODEFunc, tol=1e-3):
@@ -79,14 +77,8 @@ class ODEBlock(nn.Module):
         self.odefunc = odefunc
         self.tol = tol
 
-    def forward(self, x: torch.tensor, eval_times = None):
-        self.odefunc.nfe = 0
-
-        integration_time = torch.tensor([0, 1]).float().type_as(x)
-        if (eval_times is not None): eval_times.type_as(x)
-        out = odeint(self.odefunc, x, integration_time, rtol=self.tol, atol=self.tol, method='euler', options={'max_num_steps': MAX_NUM_STEPS})
-
-        if (eval_times is None): return out[1]
+    def forward(self, eval_times: torch.tensor, x: torch.tensor):
+        out = odeint(self.odefunc, x, eval_times, rtol=self.tol, atol=self.tol, method='euler', options={'max_num_steps': MAX_NUM_STEPS})
         return out
 
 class ODENet(nn.Module):
@@ -94,18 +86,18 @@ class ODENet(nn.Module):
     An ODE Func and ODE Block
 
     Inputs:
-        x - tensor of shape (batch_size, ODEFunc.input_dim)
+        x - tensor of shape ODEFunc.input_dim
         eval_times - None or tensor
     Outputs:
-        out - if eval_times == None, returns the ODE solution at final time t=1, else returns full ODE trajectory evaluated at points in eval_times
+        out - returns full ODE trajectory evaluated at points in eval_times
     '''
     def __init__(self, input_dim: int, hidden_dim: int):
         super(ODENet, self).__init__()
         self.odefunc = ODEFunc(input_dim, hidden_dim)
         self.odeblock = ODEBlock(self.odefunc)
 
-    def forward(self, x, eval_times=None):
-        return self.odeblock(x, eval_times)
+    def forward(self, eval_times: torch.tensor, x: torch.tensor):       
+        return self.odeblock(eval_times, x)
 
 
 
