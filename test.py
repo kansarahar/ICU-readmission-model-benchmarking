@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # cuda
     use_cuda = torch.cuda.is_available()
-    if (not use_cuda): print('CUDA is unavailable - using CPU')
+    if (not use_cuda): print('Warn: CUDA is unavailable - using CPU')
     device = torch.device('cuda:0' if use_cuda else 'cpu')
 
     # model
