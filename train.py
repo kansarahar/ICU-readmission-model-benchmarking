@@ -16,12 +16,12 @@ if __name__ == '__main__':
 
     # args
     parser = argparse.ArgumentParser(description='Train models to predict ICU readmission in patients')
-    parser.add_argument('--data_path', '-d', dest='data_path', type=str, default='./data/preprocessed/data_arrays.npz', help='path to data_arrays.npz file')
-    parser.add_argument('--batch_size', '-b', dest='batch_size', type=int, default=32, help='batch size (default: 1)')
-    parser.add_argument('--epochs', '-e', dest='epochs', type=int, default=1, help='number of epochs (default: 1)')
-    parser.add_argument('--learning_rate', '-lr', dest='learning_rate', type=float, default=0.001, help='learning rate (default: 0.001)')
-    parser.add_argument('--model_type', '-m', dest='model_type', type=str, choices=['ode_rnn'], default='ode_rnn', help='type of model you want to train (default: ode_rnn)')
-    parser.add_argument('--save_destination', '-s', dest='save_dest', type=str, default='./trained_models')
+    parser.add_argument('--data_path', dest='data_path', type=str, default='./data/preprocessed/data_arrays.npz', help='path to data_arrays.npz file')
+    parser.add_argument('--batch_size', dest='batch_size', type=int, default=32, help='batch size (default: 1)')
+    parser.add_argument('--epochs', dest='epochs', type=int, default=1, help='number of epochs (default: 1)')
+    parser.add_argument('--learning_rate', dest='learning_rate', type=float, default=0.001, help='learning rate (default: 0.001)')
+    parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn'], default='ode_rnn', help='type of model you want to train (default: ode_rnn)')
+    parser.add_argument('--save_destination', dest='save_dest', type=str, default='./trained_models')
     args = parser.parse_args()
 
     # data
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         auroc = roc_auc_score(labels, preds)
         f1 = f1_score(labels, preds)
 
-        print('\nValidation Results %s' % epoch)
+        print('\nValidation Results (Epoch %s)' % epoch)
         print('Accuracy Score: %s' % accuracy)
         print('Average Precision Score: %s' % precision)
         print('ROC AUC Score: %s' % auroc)

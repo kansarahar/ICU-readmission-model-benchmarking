@@ -22,9 +22,9 @@ def get_data_loader(path_to_data: str, type: DatasetType, batch_size, shuffle=Tr
     validate_ids = data['validate_ids']
     test_ids = data['test_ids']
 
-    if (type == 'TRAIN'):
+    if (type == DatasetType.TRAIN):
         ids = train_ids
-    elif (type == 'VALIDATE'):
+    elif (type == DatasetType.VALIDATE):
         ids = validate_ids
     else:
         ids = test_ids
