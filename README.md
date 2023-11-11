@@ -43,3 +43,12 @@ Create a new directory `./data/mimic-iii-data` and place the following **unzippe
 - SERVICES.csv
 
 Then you can run `python ./etl/etl.py` to process the raw data. This should take roughly 10 minutes to complete. If it fails part way through, you can easily find out where it failed and run the failed process by itself.
+
+## Training
+
+Run `python ./train.py` to begin training. Add a `-h` flag to view training options.
+Models get saved after every epoch. Existing models are automatically loaded. The default device is CUDA, but if CUDA is unavailable on your machine, it will give a warning and default to CPU.
+
+## Testing
+
+Run `python ./test.py` to begin testing. Add a `-h` flag to view testing options.
