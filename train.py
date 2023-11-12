@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, average_precision_score, roc_auc_score, f1_score
@@ -22,6 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('--learning_rate', dest='learning_rate', type=float, default=0.001, help='learning rate (default: 0.001)')
     parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn'], default='ode_rnn', help='type of model you want to train (default: ode_rnn)')
     parser.add_argument('--save_destination', dest='save_dest', type=str, default='./trained_models')
+    parser.add_argument('--results_destination', dest='results_dest', type=str, default='./data/results')
     args = parser.parse_args()
 
     # data
@@ -35,6 +37,7 @@ if __name__ == '__main__':
 
     # model
     save_path = os.path.abspath(os.path.join(dir_name, args.save_dest, args.model_type + '.pt'))
+    results_path = os.path.abspath(os.path.join(dir_name, args.results_dest, args.model_type + 'training_results.csv'))
     model_map = {
         'ode_rnn': ODE_RNN
     }
@@ -49,6 +52,16 @@ if __name__ == '__main__':
 
     # optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+
+    # for data visualization
+    training_results = {
+        'training_losses': [],
+        'validation_losses': [],
+        'accuracy_scores': [],
+        'precision_scores': [],
+        'roc_auc_scores': [],
+        'f1_scores': [],
+    }
 
     for epoch in range(0, args.epochs):
 
@@ -115,6 +128,13 @@ if __name__ == '__main__':
         print('Training Loss: %s' % training_loss)
         print('Validation Loss: %s' % validation_loss)
 
+        training_results['training_losses'].append(training_loss)
+        training_results['validation_losses'].append(validation_loss)
+        training_results['accuracy_scores'].append(accuracy)
+        training_results['precision_scores'].append(precision)
+        training_results['roc_auc_scores'].append(auroc)
+        training_results['f1_scores'].append(f1)
+
         training_loss = 0
         validation_loss = 0
 
@@ -122,3 +142,8 @@ if __name__ == '__main__':
         print('Saving model to %s ...' % save_path)
         torch.save(model.state_dict(), save_path)
         print('Saved model')
+
+        os.makedirs(args.results_dest, exist_ok=True)
+        print('Saving training results to %s ...' % results_path)
+        pd.DataFrame(training_results).to_csv(results_path, index=False)
+        print('Saved training results')
