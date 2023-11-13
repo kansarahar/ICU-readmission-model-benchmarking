@@ -21,7 +21,7 @@ def load_tables(data_dir: str, output_dir: str):
     # load prescriptions table
     prescriptions = pd.read_csv(os.path.join(data_dir, 'PRESCRIPTIONS.csv'), usecols=dtype.keys(), dtype=dtype, parse_dates=parse_dates)
     prescriptions = prescriptions.dropna()
-    prescriptions['ICUSTAY_ID'] = prescriptions['ICUSTAY_ID'].astype('int32')
+    prescriptions['ICUSTAY_ID'] = prescriptions['ICUSTAY_ID'].astype('float').astype('int32')
     prescriptions['DRUG'] = 'PRESC_' + prescriptions['DRUG'].str.lower().replace('\s+', '', regex=True)
     prescriptions = prescriptions.rename(columns={ 'DRUG': 'VALUECAT', 'STARTDATE': 'CHARTTIME' })
 

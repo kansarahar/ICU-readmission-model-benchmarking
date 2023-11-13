@@ -47,7 +47,7 @@ def load_output_events(data_dir: str, urine_output: list):
     output_events = pd.read_csv(os.path.join(data_dir, 'OUTPUTEVENTS.csv'), usecols=dtype.keys(), dtype=dtype, parse_dates=parse_dates)
     output_events = output_events.rename(columns={ 'VALUE': 'VALUENUM' })
     output_events = output_events[output_events['ICUSTAY_ID'].notna() & output_events['VALUENUM'].notna() & output_events['ITEMID'].isin(urine_output) & output_events['VALUENUM'] > 0]
-    output_events['ICUSTAY_ID'] = output_events['ICUSTAY_ID'].astype('int32')
+    output_events['ICUSTAY_ID'] = output_events['ICUSTAY_ID'].astype('float').astype('int32')
 
     # remove implausible measurements
     output_events = output_events[~(output_events['VALUENUM'] > 10000)]
