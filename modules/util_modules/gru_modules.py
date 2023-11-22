@@ -4,7 +4,15 @@ import torch.nn.functional as F
 from torchdiffeq import odeint, odeint_adjoint
 import numpy as np
 
-from ode_modules import ODENet
+from .ode_modules import ODENet
+
+def abs_time_to_delta(times):
+    '''
+    For each value in a given time sequence, return the difference between itself and its adjacent value
+    '''
+    delta = torch.cat((torch.unsqueeze(times[:, 0], dim=-1), times[:, 1:] - times[:, :-1]), dim=1)
+    delta = torch.clamp(delta, min=0)
+    return delta
 
 class GRUExponentialDecay(nn.Module):
     '''
@@ -18,21 +26,20 @@ class GRUExponentialDecay(nn.Module):
         output - hidden states of the RNN
     '''
 
-    def __init__(self, input_size: int, hidden_size: int, bias=True):
+    def __init__(self, input_size: int, hidden_size: int, bias=True, device=None):
         super(GRUExponentialDecay, self).__init__()
+        self.device = device
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.gru_cell = nn.GRUCell(input_size, hidden_size)
-        self.decays = nn.Parameter(torch.tensor(hidden_size))
+        self.decays = nn.Parameter(torch.tensor(hidden_size, dtype=torch.float32))
 
     def forward(self, inputs, times):
-        hn = torch.zeros(inputs.size(0), self.hidden_size)
-        out = torch.zeros(inputs.size(0), inputs.size(1), self.hidden_size)
+        hn = torch.zeros(inputs.size(0), self.hidden_size).to(self.device)
         for seq in range(inputs.size(1)):
             hn = self.gru_cell(inputs[:, seq, :], hn)
-            out[:, seq, :] = hn
             hn = hn*torch.exp(-torch.clamp(torch.unsqueeze(times[:, seq], dim=-1) * self.decays, min=0))
-        return out
+        return hn
 
 
 class GRUODEDecay(nn.Module):

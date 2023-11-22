@@ -5,13 +5,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from typing import Type
 from sklearn.metrics import accuracy_score, average_precision_score, roc_auc_score, f1_score
 
 import torch
 import torch.nn as nn
 
 from load_data import get_data_loader, DatasetType
-from modules.modules import Network, ODE_RNN
+from modules.modules import Network, ODE_RNN, RNN_Exp_Decay
 
 if __name__ == '__main__':
 
@@ -21,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=32, help='batch size (default: 1)')
     parser.add_argument('--epochs', dest='epochs', type=int, default=1, help='number of epochs (default: 1)')
     parser.add_argument('--learning_rate', dest='learning_rate', type=float, default=0.001, help='learning rate (default: 0.001)')
-    parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn'], default='ode_rnn', help='type of model you want to train (default: ode_rnn)')
+    parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn', 'rnn_exp_decay'], default='ode_rnn', help='type of model you want to train (default: ode_rnn)')
     parser.add_argument('--save_destination', dest='save_dest', type=str, default='./trained_models')
     parser.add_argument('--results_destination', dest='results_dest', type=str, default='./data/results')
     args = parser.parse_args()
@@ -39,11 +40,14 @@ if __name__ == '__main__':
     save_path = os.path.abspath(os.path.join(dir_name, args.save_dest, args.model_type + '.pt'))
     results_path = os.path.abspath(os.path.join(dir_name, args.results_dest, args.model_type + 'training_results.csv'))
     model_map = {
-        'ode_rnn': ODE_RNN
+        'ode_rnn': ODE_RNN,
+        'rnn_exp_decay': RNN_Exp_Decay,
     }
     if args.model_type not in model_map:
         sys.exit('Invalid model type - run "python train.py -h" for more info')
-    model = model_map[args.model_type](len(data_arrays['static_vars']), data_arrays['dp'].max() + 1, data_arrays['cp'].max() + 1).to(device)
+    model_type: Type[Network] = model_map[args.model_type]
+    model = model_type(len(data_arrays['static_vars']), data_arrays['dp'].max() + 1, data_arrays['cp'].max() + 1, dropout_probability=0.2, is_bidirectional=True, device=device)
+    model = model.to(device)
     if (os.path.isfile(save_path)):
         print('Loading Existing Model:', args.model_type)
         model.load_state_dict(torch.load(save_path))
