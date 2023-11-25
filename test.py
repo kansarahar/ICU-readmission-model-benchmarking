@@ -4,21 +4,22 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from typing import Type
 from sklearn.metrics import accuracy_score, average_precision_score, roc_auc_score, f1_score
 
 import torch
 import torch.nn as nn
 
 from load_data import get_data_loader, DatasetType
-from modules.modules import Network, ODE_RNN
+from modules.modules import Network, ODE_RNN, RNN_Exp_Decay
 
 if __name__ == '__main__':
 
     # args
-    parser = argparse.ArgumentParser(description='Train models to predict ICU readmission in patients')
+    parser = argparse.ArgumentParser(description='Test trained models to predict ICU readmission in patients')
     parser.add_argument('--data_path', dest='data_path', type=str, default='./data/preprocessed/data_arrays.npz', help='path to data_arrays.npz file')
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=32, help='batch size (default: 1)')
-    parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn'], default='ode_rnn', help='type of model you want to test (default: ode_rnn)')
+    parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn', 'rnn_exp_decay'], default='ode_rnn', help='type of model you want to test (default: ode_rnn)')
     parser.add_argument('--save_destination', dest='save_dest', type=str, default='./trained_models')
     args = parser.parse_args()
 
@@ -34,11 +35,14 @@ if __name__ == '__main__':
     # model
     save_path = os.path.abspath(os.path.join(dir_name, args.save_dest, args.model_type + '.pt'))
     model_map = {
-        'ode_rnn': ODE_RNN
+        'ode_rnn': ODE_RNN,
+        'rnn_exp_decay': RNN_Exp_Decay,
     }
     if args.model_type not in model_map:
-        sys.exit('Invalid model type - run "python train.py -h" for more info')
-    model = model_map[args.model_type](len(data_arrays['static_vars']), data_arrays['dp'].max() + 1, data_arrays['cp'].max() + 1).to(device)
+        sys.exit('Invalid model type - run "python test.py -h" for more info')
+    model_type: Type[Network] = model_map[args.model_type]
+    model = model_type(len(data_arrays['static_vars']), data_arrays['dp'].max() + 1, data_arrays['cp'].max() + 1, dropout_probability=0.2, is_bidirectional=True, device=device)
+    model = model.to(device)
     if (os.path.isfile(save_path)):
         print('Loading Existing Model:', args.model_type)
         model.load_state_dict(torch.load(save_path))
@@ -46,7 +50,7 @@ if __name__ == '__main__':
         sys.exit('Could not find model: %s' % save_path)
 
 
-    test_loader, test_pos_weight = get_data_loader(os.path.join(dir_name, args.data_path), DatasetType.TRAIN, args.batch_size)
+    test_loader, test_pos_weight = get_data_loader(os.path.join(dir_name, args.data_path), DatasetType.TEST, args.batch_size)
     loss_function = nn.BCEWithLogitsLoss(pos_weight=test_pos_weight)
     test_loss = 0
 
