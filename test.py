@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 
 from load_data import get_data_loader, DatasetType
-from modules.modules import Network, ODE_RNN, RNN_Exp_Decay
+from modules.modules import Network, ODE_RNN, RNN_Exp_Decay, RNN_Concat_Time_Delta
 
 if __name__ == '__main__':
 
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test trained models to predict ICU readmission in patients')
     parser.add_argument('--data_path', dest='data_path', type=str, default='./data/preprocessed/data_arrays.npz', help='path to data_arrays.npz file')
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=32, help='batch size (default: 1)')
-    parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn', 'rnn_exp_decay'], default='ode_rnn', help='type of model you want to test (default: ode_rnn)')
+    parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn', 'rnn_exp_decay', 'rnn_concat_time_delta'], default='ode_rnn', help='type of model you want to test (default: ode_rnn)')
     parser.add_argument('--save_destination', dest='save_dest', type=str, default='./trained_models')
     args = parser.parse_args()
 
@@ -37,6 +37,7 @@ if __name__ == '__main__':
     model_map = {
         'ode_rnn': ODE_RNN,
         'rnn_exp_decay': RNN_Exp_Decay,
+        'rnn_concat_time_delta': RNN_Concat_Time_Delta,
     }
     if args.model_type not in model_map:
         sys.exit('Invalid model type - run "python test.py -h" for more info')
