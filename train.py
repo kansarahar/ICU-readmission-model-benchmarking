@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 
 from load_data import get_data_loader, DatasetType
-from modules.modules import Network, ODE_RNN, RNN_Exp_Decay
+from modules.modules import Network, ODE_RNN, RNN_Exp_Decay, RNN_Concat_Time_Delta
 
 if __name__ == '__main__':
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=32, help='batch size (default: 1)')
     parser.add_argument('--epochs', dest='epochs', type=int, default=1, help='number of epochs (default: 1)')
     parser.add_argument('--learning_rate', dest='learning_rate', type=float, default=0.001, help='learning rate (default: 0.001)')
-    parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn', 'rnn_exp_decay'], default='ode_rnn', help='type of model you want to train (default: ode_rnn)')
+    parser.add_argument('--model_type', dest='model_type', type=str, choices=['ode_rnn', 'rnn_exp_decay', 'rnn_concat_time_delta'], default='ode_rnn', help='type of model you want to train (default: ode_rnn)')
     parser.add_argument('--save_destination', dest='save_dest', type=str, default='./trained_models')
     parser.add_argument('--results_destination', dest='results_dest', type=str, default='./data/results')
     args = parser.parse_args()
@@ -42,6 +42,7 @@ if __name__ == '__main__':
     model_map = {
         'ode_rnn': ODE_RNN,
         'rnn_exp_decay': RNN_Exp_Decay,
+        'rnn_concat_time_delta': RNN_Concat_Time_Delta,
     }
     if args.model_type not in model_map:
         sys.exit('Invalid model type - run "python train.py -h" for more info')

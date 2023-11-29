@@ -151,3 +151,58 @@ class RNN_Exp_Decay(Network):
         out = self.fc_final(combined)
 
         return out
+
+
+class RNN_Concat_Time_Delta(Network):
+    def __init__(self, num_static, num_dp_codes, num_cp_codes, dropout_probability=0.2, is_bidirectional=True, device=None):
+        super(RNN_Concat_Time_Delta, self).__init__(num_static, num_dp_codes, num_cp_codes, dropout_probability)
+
+        self.is_bidirectional = is_bidirectional
+        rnn_output_dim = 2 if self.is_bidirectional else 1
+
+        # RNN layers
+        self.gru_dp = nn.GRU(input_size=self.dp_embedding_dim+1, hidden_size=self.dp_embedding_dim+1, num_layers=1, bidirectional=self.is_bidirectional, batch_first=True)
+        self.gru_cp = nn.GRU(input_size=self.cp_embedding_dim+1, hidden_size=self.cp_embedding_dim+1, num_layers=1, bidirectional=self.is_bidirectional, batch_first=True)
+
+        # FC layers
+        self.fc_dp = nn.Linear(rnn_output_dim * (self.dp_embedding_dim + 1), 1)
+        self.fc_cp = nn.Linear(rnn_output_dim * (self.cp_embedding_dim + 1), 1)
+        self.fc_final = nn.Linear(num_static + 2, 1)
+
+    def forward(self, static, dp, cp, dp_times, cp_times):
+
+        # Embedding for dp and cp
+        embedded_dp = self.embed_dp(dp)
+        embedded_cp = self.embed_cp(cp)
+
+
+        # Concat Time Delta
+        dp_times = torch.round(dp_times, decimals=3)
+        cp_times = torch.round(cp_times, decimals=3)
+
+        dp_time_diffs = abs_time_to_delta(dp_times)
+        cp_time_diffs = abs_time_to_delta(cp_times)
+
+        concat_dp = torch.cat((embedded_dp, torch.unsqueeze(dp_time_diffs, dim=-1)), dim=-1)
+        concat_cp = torch.cat((embedded_cp, torch.unsqueeze(cp_time_diffs, dim=-1)), dim=-1)
+
+
+        # Dropout
+        concat_dp = self.dropout(concat_dp)
+        concat_cp = self.dropout(concat_cp)
+
+
+        # RNN
+        rnn_out_dp, rnn_hn_dp = self.gru_dp(concat_dp)
+        rnn_out_cp, rnn_hn_cp = self.gru_cp(concat_cp)
+        rnn_dp = torch.cat((rnn_hn_dp[0], rnn_hn_dp[1]), dim=-1) if self.is_bidirectional else torch.flatten(rnn_hn_dp[0]) # concatenate forward and backward passes
+        rnn_cp = torch.cat((rnn_hn_cp[0], rnn_hn_cp[1]), dim=-1) if self.is_bidirectional else torch.flatten(rnn_hn_cp[0]) # concatenate forward and backward passes
+
+
+        # FC layers
+        dp_value = self.fc_dp(rnn_dp)
+        cp_value = self.fc_cp(rnn_cp)
+        combined = torch.cat((static, dp_value, cp_value), dim=-1)
+        out = self.fc_final(combined)
+
+        return out
