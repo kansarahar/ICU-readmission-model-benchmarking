@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     # model
     save_path = os.path.abspath(os.path.join(dir_name, args.save_dest, args.model_type + '.pt'))
-    results_path = os.path.abspath(os.path.join(dir_name, args.results_dest, args.model_type + 'training_results.csv'))
+    results_path = os.path.abspath(os.path.join(dir_name, args.results_dest, args.model_type + '_training_results.csv'))
     model_map = {
         'ode_rnn': ODE_RNN,
         'rnn_exp_decay': RNN_Exp_Decay,

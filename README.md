@@ -20,16 +20,22 @@ Run `apt-get update && apt-get install -y git` to install git on the docker cont
 Run `pip install torchdiffeq`
 
 
-## Local Setup
+## Local Setup (Recommended)
 
 Ensure that you are using python 3.11
 
 Run `pip install -r requirements.txt` to install the necessary packages
 
+## Overview
+
+This codebase attempts to replicate some of the results presented in the following paper: https://www.nature.com/articles/s41598-020-58053-z
+
+Here we are measuring the performance of several different deep learning algorithms on the ability to predict patient readmission to the ICU. Patient data extracted from the MIMIC-III dataset is used as input to each of the models. This patient data includes the age, location, ethnicity, marital status, insurance type, and length of stay in the hospital/ICU for a given patient, as well as any prescriptions or procedures they may have been given.
+
 ## Data Processing
 
 Create a new directory `./data/mimic-iii-data` and place the following **unzipped** csv files in there:
-- ADMISSIONS.CSV
+- ADMISSIONS.csv
 - CHARTEVENTS.csv
 - D_ICD_DIAGNOSES.csv
 - D_ICD_PROCEDURES.csv
@@ -46,9 +52,10 @@ Then you can run `python ./etl/etl.py` to process the raw data. This should take
 
 ## Training
 
-Run `python ./train.py` to begin training. Add a `-h` flag to view training options.
-Models get saved after every epoch. Existing models are automatically loaded. The default device is CUDA, but if CUDA is unavailable on your machine, it will give a warning and default to CPU.
+Once you have processed the data, run `python ./train.py --model_type <MODEL_TYPE>` to begin training. Possible values for `<MODEL_TYPE>` are `ode_rnn`, `rnn_exp_decay`, `rnn_concat_time_delta`. Add a `-h` flag to view additional training options, such as number of epochs, batch size, learning rate, etc.
+
+Models get saved after every epoch. Existing models are automatically loaded. If you have an existing model saved but want to train from scratch, make sure you delete the corresponding `.pt` file. The default device is CUDA, but if CUDA is unavailable on your machine, it will give a warning and default to CPU.
 
 ## Testing
 
-Run `python ./test.py` to begin testing. Add a `-h` flag to view testing options.
+Similar to training, run `python ./test.py --model_type <MODEL_TYPE>` to begin testing a model after training. Add a `-h` flag to view more testing options.
