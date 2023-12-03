@@ -6,3 +6,4 @@ torch==2.1.0+cu118
 torchvision
 tqdm
 torchdiffeq
+scikit-learn
